@@ -1,0 +1,31 @@
+name: CI Pipeline
+
+on:  #Eventos a disparar
+  push: 
+    branches: [ main ]
+  pull_reqest:
+    branches: [ main ]
+  worklow_dispatch:   # Que se ejecute de la uI
+
+jobs:  
+  run-tests:  
+    name: Run Tests  #
+    runs-on: ubuntu-latest  # Es un runner donde corre Run Tests maquina virtual gratuita
+
+    steps:
+      - name:  Checkout code  
+        uses: actions/checkout@v4 #Clonado del Repo
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.21.1'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Tests
+        run: npm Test
+
+
+
