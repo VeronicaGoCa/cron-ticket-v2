@@ -3,7 +3,7 @@ name: CI Pipeline
 on:  #Eventos a disparar
   push: 
     branches: [ main ]
-  pull_reqest:
+  pull_request:
     branches: [ main ]
   workflow_dispatch:   # Que se ejecute de la uI
 
