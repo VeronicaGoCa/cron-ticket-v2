@@ -7,25 +7,28 @@ on:  #Eventos a disparar
     branches: [ main ]
   workflow_dispatch:   # Que se ejecute de la uI
 
-jobs:  
-  run-tests:  
-    name: Run Tests  #
-    runs-on: ubuntu-latest  # Es un runner donde corre Run Tests maquina virtual gratuita
+env:
+  NODE_VERSION: "22"  
+  APP_NAME: cron-ticker-v2
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env: #job build
+      BUILD_DIR: workflow_dispatch
 
     steps:
-      - name:  Checkout code  
-        uses: actions/checkout@v4 #Clonado del Repo
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4  #Instalando el node 
-        with:
-          node-version: '22.21.1'
+      - name: Show variables
+        run: echo "App: ${{env.APP_NAME}}, Node: ${{env.NODE_VERSION}}"
 
-      - name: Install Dependencies
-        run: npm ci
+      - name: Build
+        run: npm run build
+        env:
+          APP_VERSION: "3.0.0"
 
-      - name: Run Tests
-        run: npm test
-
+ 
 
 
