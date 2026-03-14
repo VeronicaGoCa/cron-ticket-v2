@@ -1,61 +1,92 @@
-name: CI Pipeline
+name: CI Pipeline Completo
 
-on:  #Eventos a disparar
-  push: 
+on:
+  push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:   # Que se ejecute de la uI
+  workflow_dispatch:
 
 env:
-  NODE_VERSION: "22"  
-  APP_NAME: cron-ticker-v2
+  NODE_VERSION: '20'
 
 jobs:
-  # -------------- JOB 2 TEST --------------------
-  build:
-    name: Build
+
+  # -------------- JOB 1: LINT --------------------
+  lint:
+    name: 🔍 Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{env.NODE_VERSION}}
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-
       - run: npm ci
+      - run: npm run lint
 
+  # -------------- JOB 2: TEST --------------------
+  test:
+    name: 🧪 Tests + Coverage
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Run tests with coverage
+        run: npm run test:coverage
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ github.sha }}
+          path: coverage/
+          retention-days: 7
+
+  # -------------- JOB 3: BUILD --------------------
+  build:
+    name: 🏗 Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
       - name: Build App
         run: npm run build
         env:
-          APP_VERSION: ${{vars.APP_VERSION || '1.0.0'}}
-
+          APP_VERSION: ${{ vars.APP_VERSION || '1.0.0' }}
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{github.sha}}
+          name: build-${{ github.sha }}
           path: dist/
           retention-days: 5
 
-  deploy:
+  # -------------- JOB 4: SUMMARY --------------------
+  summary:
+    name: ✅ Summary
     runs-on: ubuntu-latest
-    needs: Build
+    needs: [lint, test, build]
+    if: always()
     steps:
-      - name: Download build
-        uses: actions/download-artifact@v4
-        with:
-          name: build-${{github.sha}}  
-          path: dist/
-
-      - name: Deploy Logs
+      - name: Pipeline result
         run: |
-          echo "Deploying: $(cat dist/build-info.json)"
-
-      
-
-
-
-
- 
-
-
+          echo '================================='
+          echo '  PIPELINE SUMMARY'
+          echo '================================='
+          echo '  Lint:  ${{ needs.lint.result }}'
+          echo '  Test:  ${{ needs.test.result }}'
+          echo '  Build: ${{ needs.build.result }}'
+          echo '================================='
+          echo '  Commit: ${{ github.sha }}'
+          echo '  Branch: ${{ github.ref_name }}'
+          echo '  Actor:  ${{ github.actor }}'
+          echo '================================='
