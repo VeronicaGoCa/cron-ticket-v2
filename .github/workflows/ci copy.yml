@@ -1,0 +1,48 @@
+name: CI Pipeline
+
+on:  #Eventos a disparar
+  push: 
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:   # Que se ejecute de la uI
+
+env:
+  NODE_VERSION: "22"  
+  APP_NAME: cron-ticker-v2
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env: #job build
+      BUILD_DIR: workflow_dispatch
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show local variables
+        run: |
+          echo "App: ${{env.APP_NAME}}, Node: ${{env.NODE_VERSION}}"
+      
+      - name: Show Github variables
+        run: |
+          echo "App: ${{vars.APP_VERSION}}"
+
+      - name: Show Github secrets
+        run: |
+          echo "Secret: ${{secrets.API_KEY}}"
+
+      
+      - name: Show Github Functions
+        run: |
+          echo "${{toJson(github)}}"
+
+      - name: Build
+        run: npm run build
+        env:
+          APP_VERSION: "${{vars.APP_VERSION}}"
+
+ 
+
+
